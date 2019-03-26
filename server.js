@@ -70,7 +70,9 @@ function checkurl() {
 					var title = $('title').text().replace(/\s\s+/g, ' ').replace(/(\r\n|\n|\r)/gm, "").replace(/\u2013|\u2014/g, "-");;
 					console.log('title: ' + title)
 					if (title !== "") {
-						MongoClient.connect(mongourl,{ useNewUrlParser: true }, function (err, db) {
+						MongoClient.connect(mongourl, {
+							useNewUrlParser: true
+						}, function (err, db) {
 							if (err) {
 								console.log(err)
 							} else {
@@ -104,8 +106,7 @@ function collectInternalLinks($, singleUrl) {
 	var relativeLinks = $("a[href^='/']");
 	relativeLinks.each(function () {
 		var urlObject = new URL(singleUrl)
-		var fullUrl = urlObject.protocol + '//' + urlObject.hostname + $(this).attr('href')
-		fullUrl=encodeURIComponent(fullUrl)
+		var fullUrl = urlObject.protocol + '//' + urlObject.hostname + encodeURIComponent($(this).attr('href'))
 		if (url.indexOf(fullUrl) < 0 && historyUrl.indexOf(fullUrl) < 0 && fullUrl !== singleUrl) {
 			url.push(fullUrl);
 		}
