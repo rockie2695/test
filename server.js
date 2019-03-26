@@ -74,7 +74,7 @@ function checkurl() {
 							useNewUrlParser: true
 						}, function (err, db) {
 							if (err) {
-								console.log(err)
+								console.log(err,singleUrl)
 							} else {
 								insert(db, singleUrl, title, function (err) {
 									if (err) {
@@ -106,7 +106,8 @@ function collectInternalLinks($, singleUrl) {
 	var relativeLinks = $("a[href^='/']");
 	relativeLinks.each(function () {
 		var urlObject = new URL(singleUrl)
-		var fullUrl = urlObject.protocol + '//' + urlObject.hostname + encodeURIComponent($(this).attr('href'))
+		var fullUrl = urlObject.protocol + '//' + urlObject.hostname + encodeURI($(this).attr('href'))
+		console.log(fullUrl)
 		if (url.indexOf(fullUrl) < 0 && historyUrl.indexOf(fullUrl) < 0 && fullUrl !== singleUrl) {
 			url.push(fullUrl);
 		}
