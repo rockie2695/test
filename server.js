@@ -105,7 +105,7 @@ function collectInternalLinks($, singleUrl) {
 	relativeLinks.each(function () {
 		var urlObject = new URL(singleUrl)
 		var fullUrl = urlObject.protocol + '//' + urlObject.hostname + $(this).attr('href')
-		fullUrl=encodeURI(fullUrl)
+		fullUrl=encodeURIComponent(fullUrl)
 		if (url.indexOf(fullUrl) < 0 && historyUrl.indexOf(fullUrl) < 0 && fullUrl !== singleUrl) {
 			url.push(fullUrl);
 		}
