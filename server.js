@@ -29,10 +29,8 @@ app.get('/express_backend', (req, res) => {
 });
 
 app.get('/scrape', function (req, res) {
-
 	/*for outputfile	url = 'http://www.imdb.com/title/tt1229340/';*/
-	checkurl(res)
-
+	//checkurl()
 })
 
 app.get('/', (req, res) => {
@@ -50,16 +48,15 @@ function insert(db, singleUrl, title, callback) {
 		"url": singleUrl,
 		"title": title
 	}, function (err, result) {
-
-		callback("test");
+		callback(err);
 	});
 }
 
-function checkurl(res) {
+function checkurl() {
 	if (url.length > 0) {
 		var singleUrl = url.shift();
-		console.log("url: " + singleUrl);
 		if (historyUrl.indexOf(singleUrl) < 0) {
+			console.log("ask: " + singleUrl);
 			request({
 				uri: singleUrl,
 				encoding: null,
@@ -69,45 +66,34 @@ function checkurl(res) {
 				}
 			}, function (error, response, html) {
 				if (!error && response.statusCode === 200) {
-					//console.log(html)
-					//html= iconv.decode(new Buffer.from(html), "ISO-8859-1");
-					//console.log(html)
-					//console.log("Status code: " + response.statusCode);
 					var $ = cheerio.load(html);
 					var title = $('title').text().replace(/\s\s+/g, ' ').replace(/(\r\n|\n|\r)/gm, "").replace(/\u2013|\u2014/g, "-");;
-					console.log(title)
+					console.log('title: ' + title)
 					if (title !== "") {
-						MongoClient.connect(mongourl, function (err, db) {
+						MongoClient.connect(mongourl,{ useNewUrlParser: true }, function (err, db) {
 							if (err) {
 								console.log(err)
 							} else {
-								insert(db, singleUrl, title, function () {
+								insert(db, singleUrl, title, function (err) {
+									if (err) {
+										console.log(err)
+									}
 									db.close();
 								})
 							}
-
 						})
 					}
 					historyUrl.push(singleUrl)
 					collectInternalLinks($, singleUrl)
 				} else {
-					//console.log(response.statusCode, singleUrl, error) //res.status(response.statusCode).end(error);
-				}
-				console.log(url.length)
-				checkurl(res)
-				if (url.length <= 0) {
-					//res.send('Check your console!')
+					console.log(response, singleUrl, error) //res.status(response.statusCode).end(error);
 				}
 			});
 		} else {
 			console.log("repeat by history")
-			checkurl(res)
-			if (url.length <= 0) {
-				//res.send('Check your console!')
-			}
 		}
 	} else {
-		res.send('ok')
+		//res.send('ok')
 	}
 }
 
@@ -119,21 +105,21 @@ function collectInternalLinks($, singleUrl) {
 	relativeLinks.each(function () {
 		var urlObject = new URL(singleUrl)
 		var fullUrl = urlObject.protocol + '//' + urlObject.hostname + $(this).attr('href')
-		console.log(fullUrl)
 		if (url.indexOf(fullUrl) < 0 && historyUrl.indexOf(fullUrl) < 0 && fullUrl !== singleUrl) {
-			url /*allRelativeLinks*/ .push(fullUrl);
+			url.push(fullUrl);
 		}
 	});
 
 	var absoluteLinks = $("a[href^='http']");
 	absoluteLinks.each(function () {
-		console.log($(this).attr('href'))
-		var fullUrl=$(this).attr('href')
+		var fullUrl = $(this).attr('href')
 		if (url.indexOf(fullUrl) < 0 && historyUrl.indexOf(fullUrl) < 0 && fullUrl !== singleUrl) {
 			url.push($(this).attr('href'));
 		}
 	});
-
-	//console.log("Found " + allRelativeLinks.length + " relative links");
-	//console.log("Found " + allAbsoluteLinks.length + " absolute links");
 }
+
+var cronJob = require("cron").CronJob;
+new cronJob('*/5 * * * * *', function () {
+	checkurl()
+}, null, true, 'Asia/Hong_Kong');
