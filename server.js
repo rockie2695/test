@@ -53,18 +53,18 @@ function insert(db, singleUrl, title, callback) {
 
 function findHowMany(db, singleUrl, callback) {
 	db.db().collection('testUrl').aggregate([{
-			$match: {
-				"url": singleUrl
-			}
-		},
-		{
-			$group: {
-				"_id": null,
-				"count": {
-					$sum: 1
-				}
+		$match: {
+			"url": singleUrl
+		}
+	},
+	{
+		$group: {
+			"_id": null,
+			"count": {
+				$sum: 1
 			}
 		}
+	}
 	]).toArray(function (err, result) {
 		callback(err, result)
 	});
@@ -107,12 +107,12 @@ function update(db, id, title, callback) {
 	db.db().collection('testUrl').updateOne({
 		_id: new mongodb.ObjectID(id)
 	}, {
-		$set: {
-			title: title
-		}
-	}, function (err, result) {
-		callback(err, result)
-	})
+			$set: {
+				title: title
+			}
+		}, function (err, result) {
+			callback(err, result)
+		})
 }
 
 function checkurl() {
@@ -161,7 +161,28 @@ function checkurl() {
 									}
 								})
 							} else {
+								
 								console.log("title is empty")
+								//delete
+
+								MongoClient.connect(mongourl, {
+									useNewUrlParser: true
+								}, function (err, db) {
+									if (err) {
+										console.log(err)
+									} else {
+										db.collection("testUrl").remove({ _id: new mongodb.ObjectID(oneRecord._id) }, function (err, result) {
+											if (err) {
+												console.log(err)
+											} else {
+												console.log("delete")
+											}
+											db.close();
+											console.log("close db 3")
+										})
+									}
+								})
+
 							}
 							//historyUrl.push(singleUrl)
 							collectInternalLinks($, singleUrl)
