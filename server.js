@@ -171,7 +171,7 @@ function checkurl() {
 									if (err) {
 										console.log(err)
 									} else {
-										db.collection("testUrl").remove({ _id: new mongodb.ObjectID(oneRecord._id) }, function (err, result) {
+										db.db().collection("testUrl").remove({ _id: new mongodb.ObjectID(oneRecord._id) }, function (err, result) {
 											if (err) {
 												console.log(err)
 											} else {
