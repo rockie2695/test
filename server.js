@@ -187,7 +187,24 @@ function checkurl() {
 							//historyUrl.push(singleUrl)
 							collectInternalLinks($, singleUrl)
 						} else {
-
+							console.log("response status !=200")
+							MongoClient.connect(mongourl, {
+								useNewUrlParser: true
+							}, function (err, db) {
+								if (err) {
+									console.log(err)
+								} else {
+									db.db().collection("testUrl").deleteOne({ _id: new mongodb.ObjectID(oneRecord._id) }, function (err, result) {
+										if (err) {
+											console.log(err)
+										} else {
+											console.log("delete")
+										}
+										db.close();
+										console.log("close db 4")
+									})
+								}
+							})
 						}
 					})
 					//} else {
