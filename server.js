@@ -127,93 +127,75 @@ function checkurl() {
 				"title": ""
 			}, db, function (result) {
 				db.close();
-				if (result.length != 0 && result[0].url.split(".")[result[0].url.split(".").length - 1] != "pdf") {
+				if (result.length != 0) {
 					var oneRecord = result[0]
 					var singleUrl = oneRecord.url;
-					//if (historyUrl.indexOf(singleUrl) < 0) {
-					console.log("ask: " + singleUrl);
-					request({
-						uri: singleUrl,
-						encoding: null,
-						headers: {
-							'cache-control': 'no-cache',
-							'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36',
-						}
-					}, function (error, response, html) {
-						if (!error && response.statusCode === 200) {
-							var $ = cheerio.load(html);
-							var title = $('title').text().replace(/\s\s+/g, ' ').replace(/(\r\n|\n|\r)/gm, "").replace(/\u2013|\u2014/g, "-").trim();
-							if (title !== "") {
-								console.log('title: ' + title)
-								MongoClient.connect(mongourl, {
-									useNewUrlParser: true
-								}, function (err, db) {
-									if (err) {
-										console.log(err)
-									} else {
-										update(db, oneRecord._id, title, function (err) {
-											if (err) {
-												console.log(err)
-											}
-											db.close();
-											console.log("close db 1")
-										})
-									}
-								})
-							} else {
-
-								console.log("title is empty")
-								//delete
-
-								MongoClient.connect(mongourl, {
-									useNewUrlParser: true
-								}, function (err, db) {
-									if (err) {
-										console.log(err)
-									} else {
-										db.db().collection("testUrl").deleteOne({
-											_id: new mongodb.ObjectID(oneRecord._id)
-										}, function (err, result) {
-											if (err) {
-												console.log(err)
-											} else {
-												console.log("delete")
-											}
-											db.close();
-											console.log("close db 3")
-										})
-									}
-								})
-
+					if(singleUrl.split(".")[singleUrl.split(".").length-1]!="pdf"){
+						console.log("ask: " + singleUrl);
+						request({
+							uri: singleUrl,
+							encoding: null,
+							headers: {
+								'cache-control': 'no-cache',
+								'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36',
 							}
-							//historyUrl.push(singleUrl)
-							collectInternalLinks($, singleUrl)
-						} else {
-							console.log("response status !=200")
-							MongoClient.connect(mongourl, {
-								useNewUrlParser: true
-							}, function (err, db) {
-								if (err) {
-									console.log(err)
-								} else {
-									db.db().collection("testUrl").deleteOne({
-										_id: new mongodb.ObjectID(oneRecord._id)
-									}, function (err, result) {
+						}, function (error, response, html) {
+							if (!error && response.statusCode === 200) {
+								var $ = cheerio.load(html);
+								var title = $('title').text().replace(/\s\s+/g, ' ').replace(/(\r\n|\n|\r)/gm, "").replace(/\u2013|\u2014/g, "-").trim();
+								if (title !== "") {
+									console.log('title: ' + title)
+									MongoClient.connect(mongourl, {
+										useNewUrlParser: true
+									}, function (err, db) {
 										if (err) {
 											console.log(err)
 										} else {
-											console.log("delete")
+											update(db, oneRecord._id, title, function (err) {
+												if (err) {
+													console.log(err)
+												}
+												db.close();
+												console.log("close db 1")
+											})
 										}
-										db.close();
-										console.log("close db 4")
 									})
+								} else {
+	
+									console.log("title is empty")
+									//delete
+	
+									MongoClient.connect(mongourl, {
+										useNewUrlParser: true
+									}, function (err, db) {
+										if (err) {
+											console.log(err)
+										} else {
+											db.db().collection("testUrl").deleteOne({
+												_id: new mongodb.ObjectID(oneRecord._id)
+											}, function (err, result) {
+												if (err) {
+													console.log(err)
+												} else {
+													console.log("delete")
+												}
+												db.close();
+												console.log("close db 3")
+											})
+										}
+									})
+	
 								}
-							})
-						}
-					})
-					//} else {
-					//	console.log("repeat by history")
-					//}
+								//historyUrl.push(singleUrl)
+								collectInternalLinks($, singleUrl)
+							} else {
+								console.log("response status !=200")
+								deletelink(oneRecord)
+							}
+						})
+					}else{
+						deletelink(oneRecord)
+					}
 				} else {
 					MongoClient.connect(mongourl, {
 						useNewUrlParser: true
@@ -237,6 +219,28 @@ function checkurl() {
 	if (url.length > 0) {
 		
 	} else {}*/
+}
+
+function deletelink(oneRecord){
+	MongoClient.connect(mongourl, {
+		useNewUrlParser: true
+	}, function (err, db) {
+		if (err) {
+			console.log(err)
+		} else {
+			db.db().collection("testUrl").deleteOne({
+				_id: new mongodb.ObjectID(oneRecord._id)
+			}, function (err, result) {
+				if (err) {
+					console.log(err)
+				} else {
+					console.log("delete")
+				}
+				db.close();
+				console.log("close db 4")
+			})
+		}
+	})
 }
 
 function collectInternalLinks($, singleUrl) {
