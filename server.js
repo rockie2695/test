@@ -53,18 +53,18 @@ function insert(db, singleUrl, title, callback) {
 
 function findHowMany(db, singleUrl, callback) {
 	db.db().collection('testUrl').aggregate([{
-		$match: {
-			"url": singleUrl
-		}
-	},
-	{
-		$group: {
-			"_id": null,
-			"count": {
-				$sum: 1
+			$match: {
+				"url": singleUrl
+			}
+		},
+		{
+			$group: {
+				"_id": null,
+				"count": {
+					$sum: 1
+				}
 			}
 		}
-	}
 	]).toArray(function (err, result) {
 		callback(err, result)
 	});
@@ -107,12 +107,12 @@ function update(db, id, title, callback) {
 	db.db().collection('testUrl').updateOne({
 		_id: new mongodb.ObjectID(id)
 	}, {
-			$set: {
-				title: title
-			}
-		}, function (err, result) {
-			callback(err, result)
-		})
+		$set: {
+			title: title
+		}
+	}, function (err, result) {
+		callback(err, result)
+	})
 }
 
 function checkurl() {
@@ -127,7 +127,7 @@ function checkurl() {
 				"title": ""
 			}, db, function (result) {
 				db.close();
-				if (result.length != 0) {
+				if (result.length != 0 && result[0].url.split(".")[result[0].url.split(".").length - 1] != "pdf") {
 					var oneRecord = result[0]
 					var singleUrl = oneRecord.url;
 					//if (historyUrl.indexOf(singleUrl) < 0) {
@@ -161,7 +161,7 @@ function checkurl() {
 									}
 								})
 							} else {
-								
+
 								console.log("title is empty")
 								//delete
 
@@ -171,7 +171,9 @@ function checkurl() {
 									if (err) {
 										console.log(err)
 									} else {
-										db.db().collection("testUrl").deleteOne({ _id: new mongodb.ObjectID(oneRecord._id) }, function (err, result) {
+										db.db().collection("testUrl").deleteOne({
+											_id: new mongodb.ObjectID(oneRecord._id)
+										}, function (err, result) {
 											if (err) {
 												console.log(err)
 											} else {
@@ -194,7 +196,9 @@ function checkurl() {
 								if (err) {
 									console.log(err)
 								} else {
-									db.db().collection("testUrl").deleteOne({ _id: new mongodb.ObjectID(oneRecord._id) }, function (err, result) {
+									db.db().collection("testUrl").deleteOne({
+										_id: new mongodb.ObjectID(oneRecord._id)
+									}, function (err, result) {
 										if (err) {
 											console.log(err)
 										} else {
@@ -287,6 +291,6 @@ function collectInternalLinks($, singleUrl) {
 	})
 }
 var cronJob = require("cron").CronJob;
-new cronJob('*/10 * * * * *', function () {
+new cronJob('*/15 * * * * *', function () {
 	checkurl()
 }, null, true, 'Asia/Hong_Kong');
