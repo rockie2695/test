@@ -37,7 +37,10 @@ app.get('/', (req, res) => {
 		express: 'YOUR EXPRESS BACKEND IS CONNECTED TO REACT'
 	});
 });
-
+app.get('/search/:word',(req,res)=>{
+var word=decodeURI(req.params.word)
+console.log(word)
+})
 app.get(/.*/, function (req, res) {
 	res.status(404).end(req + ',' + res + ' Not Supported');
 });
