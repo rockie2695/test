@@ -50,7 +50,10 @@ function insert(db, singleUrl, title, callback) {
 		callback(err, result);
 	});
 }
-
+function randomInt(min,max) // min and max included
+{
+    return Math.floor(Math.random()*(max-min+1)+min);
+}
 function findHowMany(db, singleUrl, callback) {
 	db.db().collection('testUrl').aggregate([{
 			$match: {
@@ -128,9 +131,10 @@ function checkurl() {
 			}, db, function (result) {
 				db.close();
 				if (result.length != 0) {
-					var oneRecord = result[0]
+					var oneRecord = result[randomInt(1,result.length)]
 					var singleUrl = oneRecord.url;
-					if(singleUrl.split(".")[singleUrl.split(".").length-1]!="pdf"){
+					var nonallow = ["pdf", "gif", "jpg", "jpge"]
+					if (nonallow.indexOf(singleUrl.split(".")[singleUrl.split(".").length - 1]) < 0) {
 						console.log("ask: " + singleUrl);
 						request({
 							uri: singleUrl,
@@ -161,10 +165,10 @@ function checkurl() {
 										}
 									})
 								} else {
-	
+
 									console.log("title is empty")
 									//delete
-	
+
 									MongoClient.connect(mongourl, {
 										useNewUrlParser: true
 									}, function (err, db) {
@@ -184,7 +188,7 @@ function checkurl() {
 											})
 										}
 									})
-	
+
 								}
 								//historyUrl.push(singleUrl)
 								collectInternalLinks($, singleUrl)
@@ -193,7 +197,7 @@ function checkurl() {
 								deletelink(oneRecord)
 							}
 						})
-					}else{
+					} else {
 						deletelink(oneRecord)
 					}
 				} else {
@@ -221,7 +225,7 @@ function checkurl() {
 	} else {}*/
 }
 
-function deletelink(oneRecord){
+function deletelink(oneRecord) {
 	MongoClient.connect(mongourl, {
 		useNewUrlParser: true
 	}, function (err, db) {
