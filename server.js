@@ -267,6 +267,8 @@ function collectInternalLinks($, singleUrl) {
 				var link = urlObject.protocol + '//' + urlObject.hostname + encodeURI(relativeLinks[a].attribs.href)
 				if (Buffer.byteLength(link, 'utf8') < 1024 && url.indexOf(link) < 0) {
 					url.push(link)
+				} else if (Buffer.byteLength(link, 'utf8') >= 1024) {
+					console.log('larger than buffer')
 				}
 			}
 			var absoluteLinks = $("a[href^='http']");
@@ -274,6 +276,8 @@ function collectInternalLinks($, singleUrl) {
 				var link = absoluteLinks[a].attribs.href
 				if (Buffer.byteLength(link, 'utf8') < 1024 && url.indexOf(link) < 0) {
 					url.push(link)
+				} else if (Buffer.byteLength(link, 'utf8') >= 1024) {
+					console.log('larger than buffer')
 				}
 			}
 			for (let a = 0; a < url.length; a++) {
