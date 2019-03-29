@@ -103,10 +103,10 @@ function insertWithoutitle(db, singleUrl, callback) {
 			insert(db, singleUrl, "", function (err, result) {
 				callback(err, result)
 			})
-			console.log(singleUrl, "insert url without title to db")
+			console.log(Buffer.byteLength(link, 'utf8'), singleUrl, "insert url without title to db")
 		} else {
 			callback(err, result)
-			console.log(singleUrl, "already contain in db")
+			console.log(Buffer.byteLength(link, 'utf8'), singleUrl, "already contain in db")
 		}
 	})
 }
@@ -267,7 +267,6 @@ function collectInternalLinks($, singleUrl) {
 				var link = urlObject.protocol + '//' + urlObject.hostname + encodeURI(relativeLinks[a].attribs.href)
 				if (Buffer.byteLength(link, 'utf8') < 1024 && url.indexOf(link) < 0) {
 					url.push(link)
-					console.log(Buffer.byteLength(link, 'utf8'))
 				} else if (Buffer.byteLength(link, 'utf8') >= 1024) {
 					console.log('larger than buffer')
 				}
@@ -277,7 +276,6 @@ function collectInternalLinks($, singleUrl) {
 				var link = absoluteLinks[a].attribs.href
 				if (Buffer.byteLength(link, 'utf8') < 1024 && url.indexOf(link) < 0) {
 					url.push(link)
-					console.log(Buffer.byteLength(link, 'utf8'))
 				} else if (Buffer.byteLength(link, 'utf8') >= 1024) {
 					console.log('larger than buffer')
 				}
