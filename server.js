@@ -51,12 +51,9 @@ app.get('/search/:word', (req, res) => {
 				"title": {
 					"$regex": ".*+" + word + "+.*"
 				}
-			}, db, function (err, result) {
-				if (err) {
-					console.log(err)
-				} else {
-					res.send(result)
-				}
+			}, db, function (link) {
+				console.log(link)
+				res.send(link)
 				db.close()
 			})
 		}
@@ -331,6 +328,6 @@ function collectInternalLinks($, singleUrl) {
 	})
 }
 var cronJob = require("cron").CronJob;
-new cronJob('*/30 *1 * * * *', function () {
+new cronJob('*/30 */1 * * * *', function () {
 	checkurl()
 }, null, true, 'Asia/Hong_Kong');
