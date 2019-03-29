@@ -103,10 +103,10 @@ function insertWithoutitle(db, singleUrl, callback) {
 			insert(db, singleUrl, "", function (err, result) {
 				callback(err, result)
 			})
-			console.log(Buffer.byteLength(singleUrl, "binary"), singleUrl.length, singleUrl, "insert url without title to db")
+			console.log(Buffer.byteLength(singleUrl, "utf8")*4, singleUrl.length, singleUrl, "insert url without title to db")
 		} else {
 			callback(err, result)
-			console.log(Buffer.byteLength(singleUrl, "binary"), singleUrl.length, singleUrl, "already contain in db")
+			console.log(Buffer.byteLength(singleUrl, "uft8")*4, singleUrl.length, singleUrl, "already contain in db")
 		}
 	})
 }
