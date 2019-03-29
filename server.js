@@ -331,6 +331,6 @@ function collectInternalLinks($, singleUrl) {
 	})
 }
 var cronJob = require("cron").CronJob;
-new cronJob('*/100 * * * * *', function () {
+new cronJob('*/30 *1 * * * *', function () {
 	checkurl()
 }, null, true, 'Asia/Hong_Kong');
