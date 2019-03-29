@@ -103,10 +103,10 @@ function insertWithoutitle(db, singleUrl, callback) {
 			insert(db, singleUrl, "", function (err, result) {
 				callback(err, result)
 			})
-			console.log(Buffer.byteLength(singleUrl, "utf8")*4, singleUrl.length, singleUrl, "insert url without title to db")
+			console.log("insert url without title to db")
 		} else {
 			callback(err, result)
-			console.log(Buffer.byteLength(singleUrl, "uft8")*4, singleUrl.length, singleUrl, "already contain in db")
+			console.log("already contain in db")
 		}
 	})
 }
@@ -139,7 +139,7 @@ function checkurl() {
 					var oneRecord = result[randomInt(1, result.length)]
 					var singleUrl = oneRecord.url;
 					var nonallow = ["pdf", "gif", "jpg", "jpge"]
-					if (nonallow.indexOf(singleUrl.split(".")[singleUrl.split(".").length - 1]) < 0 && Buffer.byteLength(singleUrl, 'utf8') < 1000) {
+					if (nonallow.indexOf(singleUrl.split(".")[singleUrl.split(".").length - 1]) < 0 && (Buffer.byteLength(singleUrl, 'utf8') * 4) < 1000) {
 						console.log("ask: " + singleUrl);
 						request({
 							uri: singleUrl,
@@ -265,18 +265,18 @@ function collectInternalLinks($, singleUrl) {
 			for (let a = 0; a < relativeLinks.length; a++) {
 				var urlObject = new URL(singleUrl)
 				var link = urlObject.protocol + '//' + urlObject.hostname + encodeURI(relativeLinks[a].attribs.href)
-				if (Buffer.byteLength(link, 'utf8') < 1000 && url.indexOf(link) < 0) {
+				if ((Buffer.byteLength(link, 'utf8') * 4) < 1000 && url.indexOf(link) < 0) {
 					url.push(link)
-				} else if (Buffer.byteLength(link, 'utf8') >= 1000) {
+				} else if ((Buffer.byteLength(link, 'utf8') * 4) >= 1000) {
 					console.log('larger than buffer')
 				}
 			}
 			var absoluteLinks = $("a[href^='http']");
 			for (let a = 0; a < absoluteLinks.length; a++) {
 				var link = absoluteLinks[a].attribs.href
-				if (Buffer.byteLength(link, 'utf8') < 1000 && url.indexOf(link) < 0) {
+				if ((Buffer.byteLength(link, 'utf8') * 4) < 1000 && url.indexOf(link) < 0) {
 					url.push(link)
-				} else if (Buffer.byteLength(link, 'utf8') >= 1000) {
+				} else if ((Buffer.byteLength(link, 'utf8') * 4) >= 1000) {
 					console.log('larger than buffer')
 				}
 			}
