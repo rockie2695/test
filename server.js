@@ -40,7 +40,29 @@ app.get('/', (req, res) => {
 app.get('/search/:word', (req, res) => {
 	var word = decodeURI(req.params.word)
 	console.log(word)
-})
+	MongoClient.connect(mongourl, {
+		useNewUrlParser: true
+	}, function (err, db) {
+		if (err) {
+			console.log(err)
+			db.close()
+		} else {
+			find({
+				"title": {
+					"$regex": ".*+" + word + "+.*"
+				}
+			}, db, function (err, result) {
+				if (err) {
+					console.log(err)
+				} else {
+					res.send(result)
+				}
+				db.close()
+			})
+		}
+	})
+});
+
 app.get(/.*/, function (req, res) {
 	res.status(404).end(req + ',' + res + ' Not Supported');
 });
@@ -309,6 +331,6 @@ function collectInternalLinks($, singleUrl) {
 	})
 }
 var cronJob = require("cron").CronJob;
-new cronJob('*/60 * * * * *', function () {
+new cronJob('*/100 * * * * *', function () {
 	checkurl()
 }, null, true, 'Asia/Hong_Kong');
