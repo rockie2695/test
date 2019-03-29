@@ -37,9 +37,9 @@ app.get('/', (req, res) => {
 		express: 'YOUR EXPRESS BACKEND IS CONNECTED TO REACT'
 	});
 });
-app.get('/search/:word',(req,res)=>{
-var word=decodeURI(req.params.word)
-console.log(word)
+app.get('/search/:word', (req, res) => {
+	var word = decodeURI(req.params.word)
+	console.log(word)
 })
 app.get(/.*/, function (req, res) {
 	res.status(404).end(req + ',' + res + ' Not Supported');
@@ -53,10 +53,12 @@ function insert(db, singleUrl, title, callback) {
 		callback(err, result);
 	});
 }
-function randomInt(min,max) // min and max included
+
+function randomInt(min, max) // min and max included
 {
-    return Math.floor(Math.random()*(max-min+1)+min);
+	return Math.floor(Math.random() * (max - min + 1) + min);
 }
+
 function findHowMany(db, singleUrl, callback) {
 	db.db().collection('testUrl').aggregate([{
 			$match: {
@@ -134,10 +136,10 @@ function checkurl() {
 			}, db, function (result) {
 				db.close();
 				if (result.length != 0) {
-					var oneRecord = result[randomInt(1,result.length)]
+					var oneRecord = result[randomInt(1, result.length)]
 					var singleUrl = oneRecord.url;
 					var nonallow = ["pdf", "gif", "jpg", "jpge"]
-					if (nonallow.indexOf(singleUrl.split(".")[singleUrl.split(".").length - 1]) < 0) {
+					if (nonallow.indexOf(singleUrl.split(".")[singleUrl.split(".").length - 1]) < 0 && Buffer.byteLength(singleUrl, 'utf8') < 1024) {
 						console.log("ask: " + singleUrl);
 						request({
 							uri: singleUrl,
@@ -263,14 +265,14 @@ function collectInternalLinks($, singleUrl) {
 			for (let a = 0; a < relativeLinks.length; a++) {
 				var urlObject = new URL(singleUrl)
 				var link = urlObject.protocol + '//' + urlObject.hostname + encodeURI(relativeLinks[a].attribs.href)
-				if (url.indexOf(link) < 0) {
+				if (Buffer.byteLength(link, 'utf8') < 1024 && url.indexOf(link) < 0) {
 					url.push(link)
 				}
 			}
 			var absoluteLinks = $("a[href^='http']");
 			for (let a = 0; a < absoluteLinks.length; a++) {
 				var link = absoluteLinks[a].attribs.href
-				if (url.indexOf(link) < 0) {
+				if (Buffer.byteLength(link, 'utf8') < 1024 && url.indexOf(link) < 0) {
 					url.push(link)
 				}
 			}
