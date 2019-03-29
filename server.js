@@ -38,26 +38,31 @@ app.get('/', (req, res) => {
 	});
 });
 app.get('/search/:word', (req, res) => {
-	var word = decodeURI(req.params.word)
-	console.log(word)
-	MongoClient.connect(mongourl, {
-		useNewUrlParser: true
-	}, function (err, db) {
-		if (err) {
-			console.log(err)
-			db.close()
-		} else {
-			find({
-				"title": {
-					"$regex": ".*" + word + ".*"
-				}
-			}, db, function (link) {
-				console.log(link)
-				res.send(link)
+	if (req.params.word != "") {
+		var word = decodeURI(req.params.word)
+		console.log(word)
+		MongoClient.connect(mongourl, {
+			useNewUrlParser: true
+		}, function (err, db) {
+			if (err) {
+				console.log(err)
 				db.close()
-			})
-		}
-	})
+			} else {
+				find({
+					"title": {
+						"$regex": ".*" + word + ".*"
+					}
+				}, db, function (link) {
+					console.log(link)
+					res.send(link)
+					db.close()
+				})
+			}
+		})
+	} else {
+		res.send("{error:search word empty}")
+	}
+
 });
 
 app.get(/.*/, function (req, res) {
