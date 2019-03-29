@@ -290,6 +290,7 @@ function collectInternalLinks($, singleUrl) {
 						if (!err) {
 							resolve(value)
 						} else {
+							console.log(err)
 							reject(value)
 						}
 					})
