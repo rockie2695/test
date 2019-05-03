@@ -1,338 +1,113 @@
+//express framework
 const express = require('express');
-var fs = require('fs');
-var request = require('request');
-var cheerio = require('cheerio');
-var URL = require('url-parse');
 const app = express();
 const port = process.env.PORT || 8080;
-//var url = ["http://www.arstechnica.com"];
-var url = ["http://yahoo.com.hk"]
-var iconv = require('iconv-lite');
+
+var bodyParser = require('body-parser');
 
 //database connection
 var MongoClient = require('mongodb').MongoClient;
 var mongodb = require('mongodb');
-var assert = require('assert');
 var ObjectId = require('mongodb').ObjectID;
 // Use your own mlab account!!!
-var mongourl = 'mongodb://rockie2695:26762714Rockie@ds057816.mlab.com:57816/rockie2695_mongodb';
-
-// console.log that your server is up and running
-app.listen(port, () => console.log(`Listening on port ${port}`));
-
-// create a GET route
-app.get('/express_backend', (req, res) => {
-	res.send({
-		express: 'YOUR EXPRESS BACKEND IS CONNECTED TO REACT'
-	});
+var mongourl = "mongodb+srv://rockie2695:26762714Rockie@cluster-test-cw81o.gcp.mongodb.net/test?retryWrites=true";
+const mongoConectClient = new MongoClient(mongourl, {
+    useNewUrlParser: true
 });
 
-app.get('/scrape', function (req, res) {
-	/*for outputfile	url = 'http://www.imdb.com/title/tt1229340/';*/
-	//checkurl()
-})
+var cors = require('cors')
 
-app.get('/', (req, res) => {
-	res.send({
-		express: 'YOUR EXPRESS BACKEND IS CONNECTED TO REACT'
-	});
-});
-app.get('/search/:word', (req, res) => {
-	if (req.params.word != "") {
-		var word = decodeURI(req.params.word)
-		console.log(word)
-		MongoClient.connect(mongourl, {
-			useNewUrlParser: true
-		}, function (err, db) {
-			if (err) {
-				console.log(err)
-				db.close()
-			} else {
-				find({
-					"title": {
-						"$regex": ".*" + word + ".*"
-					}
-				}, db, function (link) {
-					console.log(link)
-					res.send(link)
-					db.close()
-				})
-			}
-		})
-	} else {
-		res.send("{error:search word empty}")
-	}
-
+app.use(cors()) // Use this after the variable declaration
+app.use(bodyParser.json());
+app.listen(port, () => {
+    console.log(`Listening on port ${port}`)
+    if (port == 8080) {
+        /*(async () => {
+            // Specify app arguments
+            await open('http://localhost:' + port, {
+                app: "chrome"
+            });
+        })();*/
+    }
 });
 
-app.get(/.*/, function (req, res) {
-	res.status(404).end(req + ',' + res + ' Not Supported');
+app.post("/insert/:collection", function (req, res) {
+    if (!req.body) {
+        res.send({ "error": "No input!" });
+        return;
+    } else {
+        req.body.blood = 0
+        req.body.lv = 0
+        req.body.mana = 0
+        req.body.phy = 0
+        req.body.soul = 0
+        req.body.magic = 0
+        req.body.time = Date.now()
+        console.log(req.body)
+        mongoConectClient.connect(err => {
+            if (err) {
+                console.log(err)
+                res.send({ "error": err });
+                return;
+            } else {
+                let collection = mongoConectClient.db("rockie2695_mongodb").collection("fun_" + req.params.collection);
+                insert(collection,
+                    req.body
+                    , function (err, result) {
+                        if (err) {
+                            res.send({ "error": err });
+                            return;
+                        } else {
+                            let sendValue = result.ops[0]
+                            sendValue._id = ObjectId(sendValue._id).toString()
+                            res.send({ "ok": sendValue });
+                            return;
+                        }
+                    }
+                )
+            }
+        })
+    }
 });
+app.post("/delete/:collection", function (req, res) {
+    if (!req.body) {
+        res.send({ "error": "No input!" });
+        return;
+    } else {
+        mongoConectClient.connect(err => {
+            if (err) {
+                console.log(err)
+                res.send({ "error": err });
+            } else {
+                let collection = mongoConectClient.db("rockie2695_mongodb").collection("fun_" + req.params.collection);
+                let sendValue=req.body
+                sendValue._id = ObjectId(sendValue._id)
+                deleteRecord(collection,
+                    sendValue
+                    , function (err, result) {
+                        if (err) {
+                            res.send({ "error": err });
+                            return;
+                        } else {
+                            let sendValue = result.deletedCount
+                            res.send({ "ok": sendValue });
+                            return;
+                        }
+                    }
+                )
+            }
 
-function insert(db, singleUrl, title, callback) {
-	db.db().collection('testUrl').insertOne({
-		"url": singleUrl,
-		"title": title
-	}, function (err, result) {
-		callback(err, result);
-	});
+
+        })
+    }
+});
+function insert(collection, query, callback) {
+    collection.insertOne(query, function (err, result) {
+        callback(err, result);
+    });
 }
-
-function randomInt(min, max) // min and max included
-{
-	return Math.floor(Math.random() * (max - min + 1) + min);
+function deleteRecord(collection, query, callback) {
+    collection.deleteOne(query, function (err, result) {
+        callback(err, result);
+    });
 }
-
-function findHowMany(db, singleUrl, callback) {
-	db.db().collection('testUrl').aggregate([{
-			$match: {
-				"url": singleUrl
-			}
-		},
-		{
-			$group: {
-				"_id": null,
-				"count": {
-					$sum: 1
-				}
-			}
-		}
-	]).toArray(function (err, result) {
-		callback(err, result)
-	});
-}
-
-function find(query, db, callback) {
-	var link = [];
-	db.db().collection('testUrl').find(query).toArray(function (err, result) {
-		if (result.length == 0) {
-			callback(link)
-		} else {
-			result.forEach(function (err, doc) {
-				if (result[doc] != null) {
-					link.push(result[doc])
-				}
-			})
-			callback(link)
-		}
-
-	})
-}
-
-function insertWithoutitle(db, singleUrl, callback) {
-	findHowMany(db, singleUrl, function (err, result) {
-		if (err) {
-			callback(err, result)
-		} else if (result[0] == null || result[0].count == 0) {
-			insert(db, singleUrl, "", function (err, result) {
-				callback(err, result)
-			})
-			console.log("insert url without title to db")
-		} else {
-			callback(err, result)
-			console.log("already contain in db")
-		}
-	})
-}
-
-function update(db, id, title, callback) {
-	db.db().collection('testUrl').updateOne({
-		_id: new mongodb.ObjectID(id)
-	}, {
-		$set: {
-			title: title
-		}
-	}, function (err, result) {
-		callback(err, result)
-	})
-}
-
-function checkurl() {
-	MongoClient.connect(mongourl, {
-		useNewUrlParser: true
-	}, function (err, db) {
-		if (err) {
-			console.log(err)
-			db.close()
-		} else {
-			find({
-				"title": ""
-			}, db, function (result) {
-				db.close();
-				if (result.length != 0) {
-					var oneRecord = result[randomInt(1, result.length)]
-					var singleUrl = oneRecord.url;
-					var nonallow = ["pdf", "gif", "jpg", "jpge"]
-					if (nonallow.indexOf(singleUrl.split(".")[singleUrl.split(".").length - 1]) < 0 && (Buffer.byteLength(singleUrl, 'utf8') * 4) < 1000) {
-						console.log("ask: " + singleUrl);
-						request({
-							uri: singleUrl,
-							encoding: null,
-							headers: {
-								'cache-control': 'no-cache',
-								'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36',
-							}
-						}, function (error, response, html) {
-							if (!error && response.statusCode === 200) {
-								var $ = cheerio.load(html);
-								var title = $('title').text().replace(/\s\s+/g, ' ').replace(/(\r\n|\n|\r)/gm, "").replace(/\u2013|\u2014/g, "-").trim();
-								if (title !== "") {
-									console.log('title: ' + title)
-									MongoClient.connect(mongourl, {
-										useNewUrlParser: true
-									}, function (err, db) {
-										if (err) {
-											console.log(err)
-										} else {
-											update(db, oneRecord._id, title, function (err) {
-												if (err) {
-													console.log(err)
-												}
-												db.close();
-												console.log("close db 1")
-											})
-										}
-									})
-								} else {
-
-									console.log("title is empty")
-									//delete
-
-									MongoClient.connect(mongourl, {
-										useNewUrlParser: true
-									}, function (err, db) {
-										if (err) {
-											console.log(err)
-										} else {
-											db.db().collection("testUrl").deleteOne({
-												_id: new mongodb.ObjectID(oneRecord._id)
-											}, function (err, result) {
-												if (err) {
-													console.log(err)
-												} else {
-													console.log("delete")
-												}
-												db.close();
-												console.log("close db 3")
-											})
-										}
-									})
-
-								}
-								//historyUrl.push(singleUrl)
-								//collectInternalLinks($, singleUrl)
-							} else {
-								console.log("response status !=200")
-								deletelink(oneRecord)
-							}
-						})
-					} else {
-						deletelink(oneRecord)
-					}
-				} else {
-					MongoClient.connect(mongourl, {
-						useNewUrlParser: true
-					}, function (err, db) {
-						find({
-							"url": "http://yahoo.com.hk"
-						}, db, function (result) {
-							insertWithoutitle(db, "http://yahoo.com.hk", function (err, result) {
-								if (err) {
-									console.log(err)
-								}
-								db.close();
-							})
-						})
-					})
-				}
-			})
-		}
-	})
-	/*
-	if (url.length > 0) {
-		
-	} else {}*/
-}
-
-function deletelink(oneRecord) {
-	MongoClient.connect(mongourl, {
-		useNewUrlParser: true
-	}, function (err, db) {
-		if (err) {
-			console.log(err)
-		} else {
-			db.db().collection("testUrl").deleteOne({
-				_id: new mongodb.ObjectID(oneRecord._id)
-			}, function (err, result) {
-				if (err) {
-					console.log(err)
-				} else {
-					console.log("delete")
-				}
-				db.close();
-				console.log("close db 4")
-			})
-		}
-	})
-}
-
-function collectInternalLinks($, singleUrl) {
-	MongoClient.connect(mongourl, {
-		useNewUrlParser: true
-	}, function (err, db) {
-		if (err) {
-			console.log(err, singleUrl)
-		} else {
-			var promises = [],
-				url = []
-			var relativeLinks = $("a[href^='/']");
-			for (let a = 0; a < relativeLinks.length; a++) {
-				var urlObject = new URL(singleUrl)
-				var link = urlObject.protocol + '//' + urlObject.hostname + encodeURI(relativeLinks[a].attribs.href)
-				if ((Buffer.byteLength(link, 'utf8') * 4) < 1000 && url.indexOf(link) < 0) {
-					url.push(link)
-				} else if ((Buffer.byteLength(link, 'utf8') * 4) >= 1000) {
-					console.log('larger than buffer')
-				}
-			}
-			var absoluteLinks = $("a[href^='http']");
-			for (let a = 0; a < absoluteLinks.length; a++) {
-				var link = absoluteLinks[a].attribs.href
-				if ((Buffer.byteLength(link, 'utf8') * 4) < 1000 && url.indexOf(link) < 0) {
-					url.push(link)
-				} else if ((Buffer.byteLength(link, 'utf8') * 4) >= 1000) {
-					console.log('larger than buffer')
-				}
-			}
-			for (let a = 0; a < url.length; a++) {
-				promises.push(relativeLink(url[a], "url " + a))
-			}
-
-			function relativeLink(url, value) {
-				return new Promise((resolve, reject) => {
-					insertWithoutitle(db, url, function (err, result) {
-						if (!err) {
-							resolve(value)
-						} else {
-							console.log(err)
-							reject(value)
-						}
-					})
-				})
-			}
-
-			Promise.all(promises).then(function () {
-				db.close();
-				console.log("close db 2")
-			}).catch(function (e) {
-				db.close();
-				console.log(e)
-			})
-
-		}
-	})
-}
-var cronJob = require("cron").CronJob;
-new cronJob('0 */2 * * * *', function () {
-	checkurl()
-}, null, true, 'Asia/Hong_Kong');
